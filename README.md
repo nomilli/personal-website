@@ -69,38 +69,6 @@ cover: "/images/projects/clock.jpg"
 
 The filename becomes the URL, e.g. `led-matrix-clock.md` → `/projects/led-matrix-clock/`.
 
-## Deploying (GitHub Pages)
-
-This repo includes a GitHub Actions workflow (`.github/workflows/deploy.yml`)
-that builds and deploys the site automatically on every push to `main`. The
-custom domain `nolanmilleson.com` is wired up via `public/CNAME`.
-
-### One-time setup
-
-1. **Create an empty repo** on GitHub (no README/license) under the `nomilli`
-   account, then push:
-
-   ```bash
-   git remote add origin https://github.com/nomilli/<repo-name>.git
-   git push -u origin main
-   ```
-
-2. **Enable Pages:** repo **Settings → Pages → Build and deployment → Source:
-   “GitHub Actions”**. The workflow runs on push and deploys the build.
-
-3. **Custom domain:** repo **Settings → Pages → Custom domain** → enter
-   `nolanmilleson.com` → Save. Tick **Enforce HTTPS** once the cert is issued.
-
-4. **DNS at Squarespace** (Domains → `nolanmilleson.com` → DNS settings). Add:
-   - Four **A** records for the apex `@` → `185.199.108.153`, `185.199.109.153`,
-     `185.199.110.153`, `185.199.111.153`
-   - One **CNAME** record: host `www` → `nomilli.github.io`
-   - Remove any existing parking A records that conflict.
-
-   DNS can take minutes to a few hours to propagate.
-
-After that, every `git push` to `main` redeploys automatically.
-
 ## Tech notes
 
 - Astro 5 with Markdown/MDX content collections (`src/content.config.ts`)
