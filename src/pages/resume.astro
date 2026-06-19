@@ -1,0 +1,215 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { SITE } from "../config";
+
+/* ────────────────────────────────────────────────────────────
+   EDIT YOUR RESUME HERE.
+   This data drives the web resume below. Keep your PDF in sync by
+   dropping it at  public/resume.pdf  (the download button links to it).
+   ──────────────────────────────────────────────────────────── */
+const resume = {
+  headline: "Engineer & Maker",
+  location: "City, State",
+  summary:
+    "Short professional summary — who you are, what you build, and what you're looking for. Two or three sentences is plenty.",
+  experience: [
+    {
+      role: "Job Title",
+      org: "Company / Organization",
+      period: "2022 — Present",
+      bullets: [
+        "Accomplishment or responsibility, ideally with a measurable result.",
+        "Another highlight — what you built, fixed, or improved.",
+      ],
+    },
+    {
+      role: "Previous Title",
+      org: "Earlier Company",
+      period: "2019 — 2022",
+      bullets: ["Key accomplishment.", "Another key accomplishment."],
+    },
+  ],
+  education: [
+    {
+      credential: "B.S. in Your Field",
+      org: "University Name",
+      period: "Year",
+    },
+  ],
+  skills: [
+    "Electronics / PCB design",
+    "Embedded firmware",
+    "CAD / CAM",
+    "Woodworking",
+    "Add your own",
+  ],
+};
+---
+
+<BaseLayout title="Resume" description={`Resume of ${SITE.name}.`}>
+  <section class="section">
+    <div class="container resume">
+      <div class="resume-top">
+        <div>
+          <p class="eyebrow">Resume</p>
+          <h1>{SITE.name}</h1>
+          <p class="resume-headline">
+            {resume.headline} · <span class="muted">{resume.location}</span>
+          </p>
+        </div>
+        <div class="resume-actions">
+          <a class="btn btn-primary" href="/resume.pdf" download>
+            ↓ Download PDF
+          </a>
+          <a class="btn btn-ghost" href={`mailto:${SITE.email}`}>Email me</a>
+        </div>
+      </div>
+
+      <p class="resume-summary">{resume.summary}</p>
+
+      <div class="resume-grid">
+        <div class="resume-main">
+          <h2>Experience</h2>
+          {
+            resume.experience.map((job) => (
+              <div class="entry">
+                <div class="entry-head">
+                  <h3>
+                    {job.role} <span class="at">·</span> {job.org}
+                  </h3>
+                  <span class="period">{job.period}</span>
+                </div>
+                <ul>
+                  {job.bullets.map((b) => (
+                    <li>{b}</li>
+                  ))}
+                </ul>
+              </div>
+            ))
+          }
+
+          <h2>Education</h2>
+          {
+            resume.education.map((ed) => (
+              <div class="entry">
+                <div class="entry-head">
+                  <h3>{ed.credential}</h3>
+                  <span class="period">{ed.period}</span>
+                </div>
+                <p class="muted">{ed.org}</p>
+              </div>
+            ))
+          }
+        </div>
+
+        <aside class="resume-side">
+          <h2>Skills</h2>
+          <ul class="skills">
+            {resume.skills.map((s) => <li>{s}</li>)}
+          </ul>
+
+          <h2>Contact</h2>
+          <p>
+            <a href={`mailto:${SITE.email}`}>{SITE.email}</a>
+          </p>
+        </aside>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .resume {
+    max-width: 56rem;
+  }
+  .resume-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .resume-top h1 {
+    margin: 0;
+  }
+  .resume-headline {
+    font-size: 1.15rem;
+    margin: 0.3rem 0 0;
+  }
+  .resume-actions {
+    display: flex;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+  }
+  .resume-summary {
+    font-size: 1.15rem;
+    color: var(--ink-soft);
+    max-width: 60ch;
+    margin: 1.5rem 0 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .resume-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+  @media (min-width: 720px) {
+    .resume-grid {
+      grid-template-columns: 2fr 1fr;
+    }
+  }
+  .resume-main h2:first-child {
+    margin-top: 0;
+  }
+  .entry {
+    margin-bottom: 1.6rem;
+  }
+  .entry-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .entry-head h3 {
+    margin: 0;
+    font-size: 1.15rem;
+  }
+  .at {
+    color: var(--ink-faint);
+    font-weight: 400;
+  }
+  .period {
+    color: var(--ink-faint);
+    font-size: 0.9rem;
+    white-space: nowrap;
+  }
+  .entry ul {
+    margin: 0.5rem 0 0;
+    padding-left: 1.2rem;
+  }
+  .entry li {
+    margin-bottom: 0.3rem;
+    color: var(--ink-soft);
+  }
+  .resume-side h2:first-child {
+    margin-top: 0;
+  }
+  .skills {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .skills li {
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 0.25rem 0.7rem;
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+  }
+</style>

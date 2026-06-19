@@ -1,0 +1,58 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import EntryCard from "../../components/EntryCard.astro";
+
+const isLive = (e: { data: { draft: boolean } }) =>
+  import.meta.env.PROD ? !e.data.draft : true;
+
+const projects = (await getCollection("projects"))
+  .filter(isLive)
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+---
+
+<BaseLayout
+  title="Projects"
+  description="Build logs for electronics, woodworking, and other workshop projects."
+>
+  <section class="section">
+    <div class="container">
+      <p class="eyebrow">Build logs</p>
+      <h1>Projects</h1>
+      <p class="muted page-intro">
+        Ongoing and finished builds — electronics, woodworking, and whatever else
+        is on the bench. Each log captures the process, the mistakes, and what I'd
+        do differently.
+      </p>
+
+      {
+        projects.length > 0 ? (
+          <div class="card-grid">
+            {projects.map((p) => (
+              <EntryCard
+                href={`/projects/${p.id}/`}
+                title={p.data.title}
+                excerpt={p.data.description}
+                date={p.data.pubDate}
+                cover={p.data.cover}
+                coverAlt={p.data.coverAlt}
+                category={p.data.category}
+                status={p.data.status}
+                tags={p.data.tags}
+              />
+            ))}
+          </div>
+        ) : (
+          <p class="muted">No projects published yet.</p>
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .page-intro {
+    max-width: 52ch;
+    margin-bottom: 2.5rem;
+  }
+</style>

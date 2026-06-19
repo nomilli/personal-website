@@ -1,0 +1,157 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import EntryCard from "../components/EntryCard.astro";
+import { SITE } from "../config";
+
+const isLive = (e: { data: { draft: boolean } }) =>
+  import.meta.env.PROD ? !e.data.draft : true;
+const byDate = (a: any, b: any) =>
+  b.data.pubDate.valueOf() - a.data.pubDate.valueOf();
+
+const projects = (await getCollection("projects")).filter(isLive).sort(byDate);
+const posts = (await getCollection("blog")).filter(isLive).sort(byDate);
+
+const recentProjects = projects.slice(0, 3);
+const recentPosts = posts.slice(0, 3);
+---
+
+<BaseLayout>
+  <!-- Hero -->
+  <section class="hero section">
+    <div class="container hero-inner">
+      <p class="eyebrow">Welcome to the workshop</p>
+      <h1>{SITE.name}</h1>
+      <p class="lead">{SITE.tagline}</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="/projects">See what I'm building</a>
+        <a class="btn btn-ghost" href={`mailto:${SITE.email}`}>Get in touch</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Recent projects -->
+  <section class="section band">
+    <div class="container">
+      <div class="section-head">
+        <h2>Project logs</h2>
+        <a href="/projects" class="see-all">All projects →</a>
+      </div>
+      {
+        recentProjects.length > 0 ? (
+          <div class="card-grid">
+            {recentProjects.map((p) => (
+              <EntryCard
+                href={`/projects/${p.id}/`}
+                title={p.data.title}
+                excerpt={p.data.description}
+                date={p.data.pubDate}
+                cover={p.data.cover}
+                coverAlt={p.data.coverAlt}
+                category={p.data.category}
+                status={p.data.status}
+                tags={p.data.tags}
+              />
+            ))}
+          </div>
+        ) : (
+          <p class="muted">No projects yet — check back soon.</p>
+        )
+      }
+    </div>
+  </section>
+
+  <!-- Recent posts -->
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <h2>From the blog</h2>
+        <a href="/blog" class="see-all">All posts →</a>
+      </div>
+      {
+        recentPosts.length > 0 ? (
+          <div class="card-grid">
+            {recentPosts.map((p) => (
+              <EntryCard
+                href={`/blog/${p.id}/`}
+                title={p.data.title}
+                excerpt={p.data.description}
+                date={p.data.pubDate}
+                cover={p.data.cover}
+                coverAlt={p.data.coverAlt}
+                tags={p.data.tags}
+              />
+            ))}
+          </div>
+        ) : (
+          <p class="muted">No posts yet — check back soon.</p>
+        )
+      }
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section class="section band contact">
+    <div class="container contact-inner">
+      <div>
+        <h2>Let's talk</h2>
+        <p class="muted">
+          Questions about a build, collaboration, or work? Drop me a line.
+        </p>
+      </div>
+      <a class="btn btn-primary" href={`mailto:${SITE.email}`}>{SITE.email}</a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .hero {
+    padding-block: 5rem 4rem;
+  }
+  .hero-inner {
+    max-width: 52rem;
+  }
+  .lead {
+    font-size: 1.3rem;
+    color: var(--ink-soft);
+    max-width: 40ch;
+    margin: 0 0 1.8rem;
+  }
+  .hero-actions {
+    display: flex;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+  }
+  .band {
+    background: var(--paper-2);
+    border-block: 1px solid var(--line);
+  }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.6rem;
+  }
+  .section-head h2 {
+    margin: 0;
+  }
+  .see-all {
+    text-decoration: none;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .contact-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .contact h2 {
+    margin: 0 0 0.3rem;
+  }
+  .contact p {
+    margin: 0;
+  }
+</style>

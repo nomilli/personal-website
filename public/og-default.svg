@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#f6efe3"/>
+  <rect width="1200" height="630" fill="url(#g)" opacity="0.5"/>
+  <defs>
+    <radialGradient id="g" cx="20%" cy="20%" r="90%">
+      <stop offset="0%" stop-color="#efe6d6"/>
+      <stop offset="100%" stop-color="#f6efe3"/>
+    </radialGradient>
+  </defs>
+  <path d="M120 470 L180 360 L240 470 Z" fill="#b8542a"/>
+  <rect x="110" y="478" width="140" height="14" rx="7" fill="#b08642"/>
+  <text x="120" y="250" font-family="Georgia, serif" font-size="84" font-weight="700" fill="#2a2622">Your Name</text>
+  <text x="124" y="320" font-family="system-ui, sans-serif" font-size="34" fill="#5c5247">Engineer &amp; maker — electronics &amp; woodworking</text>
+</svg>

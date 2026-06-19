@@ -1,0 +1,102 @@
+---
+import { SITE } from "../config";
+
+const year = new Date().getFullYear();
+
+const socials = Object.entries(SITE.social).filter(([, v]) => v) as [
+  string,
+  string,
+][];
+
+const labels: Record<string, string> = {
+  github: "GitHub",
+  linkedin: "LinkedIn",
+  instagram: "Instagram",
+  youtube: "YouTube",
+  mastodon: "Mastodon",
+};
+---
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <div>
+      <p class="footer-name">{SITE.name}</p>
+      <p class="muted footer-tag">{SITE.tagline}</p>
+    </div>
+    <div class="footer-links">
+      <a class="footer-email" href={`mailto:${SITE.email}`}>{SITE.email}</a>
+      {
+        socials.length > 0 && (
+          <ul>
+            {socials.map(([key, url]) => (
+              <li>
+                <a href={url} rel="me noopener" target="_blank">
+                  {labels[key] ?? key}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </div>
+  </div>
+  <div class="container footer-base">
+    <span class="muted">© {year} {SITE.name}</span>
+    <a class="muted" href="/rss.xml">RSS</a>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--line);
+    background: var(--paper-2);
+    padding-block: 2.5rem 1.5rem;
+    margin-top: 4rem;
+  }
+  .footer-inner {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1.5rem;
+  }
+  .footer-name {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0;
+  }
+  .footer-tag {
+    margin: 0.2rem 0 0;
+    max-width: 32ch;
+    font-size: 0.95rem;
+  }
+  .footer-links {
+    text-align: right;
+  }
+  .footer-email {
+    font-weight: 600;
+  }
+  .footer-links ul {
+    list-style: none;
+    margin: 0.6rem 0 0;
+    padding: 0;
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+  .footer-links a {
+    text-decoration: none;
+  }
+  .footer-base {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--line);
+    font-size: 0.85rem;
+  }
+  .footer-base a {
+    text-decoration: none;
+  }
+</style>

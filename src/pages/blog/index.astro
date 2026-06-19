@@ -1,0 +1,51 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import EntryCard from "../../components/EntryCard.astro";
+
+const isLive = (e: { data: { draft: boolean } }) =>
+  import.meta.env.PROD ? !e.data.draft : true;
+
+const posts = (await getCollection("blog"))
+  .filter(isLive)
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+---
+
+<BaseLayout title="Blog" description="Writing on making, engineering, and the occasional tangent.">
+  <section class="section">
+    <div class="container">
+      <p class="eyebrow">Writing</p>
+      <h1>Blog</h1>
+      <p class="muted page-intro">
+        Notes, tutorials, and longer-form thinking on whatever I'm working through.
+      </p>
+
+      {
+        posts.length > 0 ? (
+          <div class="card-grid">
+            {posts.map((p) => (
+              <EntryCard
+                href={`/blog/${p.id}/`}
+                title={p.data.title}
+                excerpt={p.data.description}
+                date={p.data.pubDate}
+                cover={p.data.cover}
+                coverAlt={p.data.coverAlt}
+                tags={p.data.tags}
+              />
+            ))}
+          </div>
+        ) : (
+          <p class="muted">No posts published yet.</p>
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .page-intro {
+    max-width: 52ch;
+    margin-bottom: 2.5rem;
+  }
+</style>
