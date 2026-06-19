@@ -8,40 +8,66 @@ import { SITE } from "../config";
    dropping it at  public/resume.pdf  (the download button links to it).
    ──────────────────────────────────────────────────────────── */
 const resume = {
-  headline: "Engineer & Maker",
-  location: "City, State",
+  headline: "Electrical / Hardware Engineer",
+  location: "Tomball, TX",
   summary:
-    "Short professional summary — who you are, what you build, and what you're looking for. Two or three sentences is plenty.",
+    "Electrical and hardware engineer with experience spanning spaceflight, industrial instrumentation, and high-performance computing — designing PCBs, writing embedded firmware, and driving hardware failures to root cause.",
   experience: [
     {
-      role: "Job Title",
-      org: "Company / Organization",
-      period: "2022 — Present",
+      role: "Electrical / Hardware Engineer II",
+      org: "Hewlett Packard Enterprise (HPE) — Spring, TX",
+      period: "Nov 2024 — Present",
       bullets: [
-        "Accomplishment or responsibility, ideally with a measurable result.",
-        "Another highlight — what you built, fixed, or improved.",
+        "Supported and enhanced post-release functionality for Edgeline and HPC (High Performance Compute) platforms — feature updates, option additions, and bug fixes.",
+        "Diagnosed hardware and software failures and authored Root Cause Analyses, identifying systemic defects and documenting findings in Confluence and Jira.",
+        "Led cross-functional remediation of executive escalations, communicating status to stakeholders and driving through to root cause and fix implementation.",
+        "Mentored and trained fellow engineers on troubleshooting, product architecture, and team processes — particularly as an SME in I2C and CPLD.",
+        "Submitted a patent application and contributed to innovation in server hardware design.",
       ],
     },
     {
-      role: "Previous Title",
-      org: "Earlier Company",
-      period: "2019 — 2022",
-      bullets: ["Key accomplishment.", "Another key accomplishment."],
+      role: "Electrical Engineer II",
+      org: "Metrix Instrument Co. — Houston, TX",
+      period: "Jan 2024 — Nov 2024",
+      bullets: [
+        "Fixed firmware bugs and implemented new algorithms on STM microcontrollers.",
+        "Modified a C# automated test suite for the finalized product to improve functionality.",
+        "Redesigned a legacy equipment programmer around a modern Arduino-based microcontroller, rewriting BASIC firmware into non-blocking C/C++.",
+        "Created a new PCB in Altium from a legacy schematic — sourcing replacements and building new Altium parts for the full design.",
+        "Analyzed part lifecycles for older production designs using SiliconExpert.",
+        "Built Altium templates and OneNote structure for the engineering team in an ISO-9001 environment.",
+      ],
+    },
+    {
+      role: "Electrical Design Engineer",
+      org: "Invocon, Inc. — Shenandoah, TX",
+      period: "Feb 2021 — Jan 2024",
+      bullets: [
+        "Led the redesign of a high-current pyrotechnic controller to improve performance and accuracy.",
+        "Managed build and testing of a pyro controller system for LEO (Low-Earth Orbit) applications.",
+        "Diagnosed and repaired hardware destined for the International Space Station.",
+        "Designed a rocket control and telemetry system for a company hardware demonstration.",
+        "Reviewed PCAs in Altium Designer for root cause analysis; built BOMs for custom cables and test equipment.",
+        "Created and modified test plans for flight-ready hardware, and provided field support installing an impact detection system.",
+      ],
     },
   ],
   education: [
     {
-      credential: "B.S. in Your Field",
-      org: "University Name",
-      period: "Year",
+      credential: "B.S. in Electrical Engineering",
+      org: "Kansas State University, Manhattan, KS · Electronics & Communications emphasis · Minor in Business · GPA 3.851",
+      period: "Dec 2020",
     },
   ],
   skills: [
-    "Electronics / PCB design",
-    "Embedded firmware",
-    "CAD / CAM",
-    "Woodworking",
-    "Add your own",
+    "PCB design (Altium Designer)",
+    "Embedded firmware (C/C++)",
+    "STM32 & Arduino",
+    "C# test automation",
+    "I2C & CPLD (SME)",
+    "Root cause analysis",
+    "Hardware bring-up & debug",
+    "BOM & part sourcing",
   ],
 };
 ---
