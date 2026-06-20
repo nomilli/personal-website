@@ -17,9 +17,11 @@ parts:
   - name: "WS2812B addressable LEDs (reel of 300)"
     qty: 1
     cost: 22.00
+    link: "https://www.adafruit.com/product/1138"
   - name: "5V 4A power supply"
     qty: 1
     cost: 12.99
+    link: "https://www.adafruit.com/product/1466"
   - name: "Photoresistor (light sensor)"
     qty: 1
     cost: 0.75

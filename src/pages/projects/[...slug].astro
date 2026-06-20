@@ -144,7 +144,16 @@ const money = (n: number) =>
                     <tr>
                       <td>
                         {p.link ? (
-                          <a href={p.link} target="_blank" rel="noopener">{p.name}</a>
+                          <a
+                            class="buy-link"
+                            href={p.link}
+                            target="_blank"
+                            rel="noopener"
+                            title={`Buy / view: ${p.name}`}
+                          >
+                            {p.name}
+                            <span class="ext" aria-hidden="true">↗</span>
+                          </a>
                         ) : (
                           p.name
                         )}
@@ -173,7 +182,7 @@ const money = (n: number) =>
       {
         d.learnings.length > 0 && (
           <section class="proj-block">
-            <h2>What I learned</h2>
+            <h2>Learnings</h2>
             <ul class="learnings">
               {d.learnings.map((l) => <li>{l}</li>)}
             </ul>
@@ -379,6 +388,18 @@ const money = (n: number) =>
     text-align: right;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
+  }
+  .bom .buy-link {
+    font-weight: 600;
+    text-decoration-color: var(--rust);
+  }
+  .bom .buy-link .ext {
+    font-size: 0.82em;
+    color: var(--ink-faint);
+    margin-left: 0.1em;
+  }
+  .bom .buy-link:hover .ext {
+    color: var(--rust);
   }
   .bom tfoot .total-label {
     color: var(--ink-faint);
