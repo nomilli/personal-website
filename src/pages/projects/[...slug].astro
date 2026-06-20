@@ -17,13 +17,38 @@ const d = entry.data;
 const fmt = (date: Date) =>
   date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
 
-// Aggregate this project's build-log updates (newest first).
+// Aggregate this project's build-log updates.
 const isLive = (e: { data: { draft: boolean } }) =>
   import.meta.env.PROD ? !e.data.draft : true;
-const updates = (await getCollection("logs"))
+
+// Build-log ordering on this page. "newest" = reverse chronological (latest on
+// top); "oldest" = chronological (reads as the build story start-to-finish).
+const BUILD_LOG_ORDER: "newest" | "oldest" = "oldest";
+
+const updateEntries = (await getCollection("logs"))
   .filter((u) => u.data.project.id === entry.id)
   .filter(isLive)
-  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+  .sort((a, b) =>
+    BUILD_LOG_ORDER === "newest"
+      ? b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+      : a.data.pubDate.valueOf() - b.data.pubDate.valueOf()
+  );
+
+// Render each update's Markdown so it can be expanded inline.
+const updates = await Promise.all(
+  updateEntries.map(async (u) => ({
+    id: u.id,
+    data: u.data,
+    Content: (await render(u)).Content,
+  }))
+);
+
+// Newest update (by date, regardless of display order). For in-progress
+// projects we feature it in a highlight above the chronological build log.
+const latest = updates.length
+  ? updates.reduce((a, b) => (a.data.pubDate >= b.data.pubDate ? a : b))
+  : null;
+const showLatestHighlight = d.status === "in-progress" && latest !== null;
 
 // Parts / cost math.
 const parts = d.parts;
@@ -156,6 +181,23 @@ const money = (n: number) =>
         )
       }
 
+      <!-- Latest update (in-progress projects only) -->
+      {
+        showLatestHighlight && latest && (
+          <section class="proj-block latest-update">
+            <p class="latest-label">● Latest update</p>
+            <p class="latest-meta">{fmt(latest.data.pubDate)}</p>
+            <h2 class="latest-title">{latest.data.title}</h2>
+            <div class="prose">
+              <latest.Content />
+              <p class="timeline-permalink">
+                <a href={`/logs/${latest.id}/`}>Open this update on its own page ↗</a>
+              </p>
+            </div>
+          </section>
+        )
+      }
+
       <!-- Aggregated build log -->
       <section class="proj-block" id="build-log">
         <div class="block-head">
@@ -167,13 +209,24 @@ const money = (n: number) =>
             <ol class="timeline">
               {updates.map((u) => (
                 <li>
-                  <a class="timeline-item" href={`/logs/${u.id}/`}>
-                    <span class="timeline-date">{fmt(u.data.pubDate)}</span>
-                    <span class="timeline-title">{u.data.title}</span>
-                    {u.data.description && (
-                      <span class="timeline-excerpt">{u.data.description}</span>
-                    )}
-                  </a>
+                  <details class="timeline-entry">
+                    <summary>
+                      <span class="timeline-head">
+                        <span class="timeline-date">{fmt(u.data.pubDate)}</span>
+                        <span class="timeline-title">{u.data.title}</span>
+                        {u.data.description && (
+                          <span class="timeline-excerpt">{u.data.description}</span>
+                        )}
+                      </span>
+                      <span class="timeline-toggle" aria-hidden="true" />
+                    </summary>
+                    <div class="timeline-body prose">
+                      <u.Content />
+                      <p class="timeline-permalink">
+                        <a href={`/logs/${u.id}/`}>Open this update on its own page ↗</a>
+                      </p>
+                    </div>
+                  </details>
                 </li>
               ))}
             </ol>
@@ -348,6 +401,33 @@ const money = (n: number) =>
     color: var(--ink-soft);
   }
 
+  /* latest-update highlight */
+  .latest-update {
+    background: color-mix(in srgb, var(--rust) 6%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--rust) 28%, var(--line));
+    border-radius: var(--radius-lg);
+    padding: 1.4rem 1.6rem 1.2rem;
+  }
+  .latest-label {
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--rust);
+    margin: 0;
+  }
+  .latest-meta {
+    font-size: 0.85rem;
+    color: var(--ink-faint);
+    margin: 0.3rem 0 0;
+  }
+  .latest-title {
+    margin: 0.2rem 0 0.8rem;
+  }
+  .latest-update .prose {
+    max-width: none;
+  }
+
   /* build-log timeline */
   .timeline {
     list-style: none;
@@ -358,15 +438,51 @@ const money = (n: number) =>
   .timeline li {
     position: relative;
   }
-  .timeline-item {
-    display: block;
-    padding: 0.9rem 0 0.9rem 1.4rem;
-    text-decoration: none;
-    color: inherit;
+  .timeline-entry summary {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.9rem 0.8rem 0.9rem 1.4rem;
+    cursor: pointer;
     border-radius: 0 var(--radius) var(--radius) 0;
+    list-style: none;
   }
-  .timeline-item:hover {
+  /* hide the default disclosure triangle */
+  .timeline-entry summary::-webkit-details-marker {
+    display: none;
+  }
+  .timeline-entry summary:hover {
     background: var(--paper-2);
+  }
+  .timeline-entry summary:focus-visible {
+    outline: 2px solid var(--rust);
+    outline-offset: 2px;
+  }
+  .timeline-head {
+    display: block;
+  }
+  .timeline-toggle {
+    flex: none;
+    width: 11px;
+    height: 11px;
+    margin-top: 0.5rem;
+    border-right: 2px solid var(--ink-faint);
+    border-bottom: 2px solid var(--ink-faint);
+    transform: rotate(45deg);
+    transition: transform 0.15s ease;
+  }
+  .timeline-entry[open] .timeline-toggle {
+    transform: rotate(-135deg);
+  }
+  .timeline-body {
+    padding: 0.2rem 0.8rem 1.2rem 1.4rem;
+    margin: 0;
+  }
+  .timeline-permalink {
+    margin-top: 1.2rem;
+    font-weight: 600;
+    font-size: 0.9rem;
   }
   .timeline li::before {
     content: "";
@@ -378,6 +494,7 @@ const money = (n: number) =>
     border-radius: 50%;
     background: var(--rust);
     border: 2px solid var(--paper);
+    z-index: 1;
   }
   .timeline-date {
     display: block;
