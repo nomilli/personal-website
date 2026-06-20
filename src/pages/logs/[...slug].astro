@@ -1,0 +1,41 @@
+---
+import { getCollection, getEntry, render } from "astro:content";
+import ArticleLayout from "../../layouts/ArticleLayout.astro";
+
+export async function getStaticPaths() {
+  const updates = await getCollection("logs");
+  return updates.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const d = entry.data;
+
+// Resolve the parent project for the context link + back link.
+const project = await getEntry(d.project);
+---
+
+<ArticleLayout
+  title={d.title}
+  description={d.description}
+  pubDate={d.pubDate}
+  cover={d.cover}
+  coverAlt={d.coverAlt}
+  tags={d.tags}
+  backHref="/logs"
+  backLabel="All updates"
+  projectHref={`/projects/${project.id}/`}
+  projectTitle={project.data.title}
+>
+  <Content />
+
+  <hr />
+  <p class="muted">
+    This update is part of <a href={`/projects/${project.id}/`}>{project.data.title}</a>.
+    See the <a href={`/projects/${project.id}/#build-log`}>full build log</a> or
+    browse <a href="/logs">all project logs</a>.
+  </p>
+</ArticleLayout>

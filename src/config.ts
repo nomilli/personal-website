@@ -41,6 +41,7 @@ export const SITE = {
 /** Top navigation links. */
 export const NAV = [
   { label: "Projects", href: "/projects" },
+  { label: "Project Logs", href: "/logs" },
   { label: "Blog", href: "/blog" },
   { label: "Resume", href: "/resume" },
 ] as const;

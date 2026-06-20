@@ -13,6 +13,9 @@ interface Props {
   tags?: string[];
   backHref: string;
   backLabel: string;
+  /** Optional "part of <project>" context link, shown above the title. */
+  projectHref?: string;
+  projectTitle?: string;
 }
 
 const {
@@ -27,10 +30,12 @@ const {
   tags = [],
   backHref,
   backLabel,
+  projectHref,
+  projectTitle,
 } = Astro.props;
 
 const fmt = (d: Date) =>
-  d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
 ---
 
 <BaseLayout title={title} description={description} image={cover}>
@@ -39,6 +44,13 @@ const fmt = (d: Date) =>
       <a class="back" href={backHref}>← {backLabel}</a>
 
       <header class="article-head">
+        {
+          projectHref && projectTitle && (
+            <p class="article-project">
+              Build log · <a href={projectHref}>{projectTitle}</a>
+            </p>
+          )
+        }
         <div class="article-meta">
           {category && <span>{category}</span>}
           {status && <span class="chip chip-status" data-status={status}>{status.replace("-", " ")}</span>}
@@ -84,6 +96,17 @@ const fmt = (d: Date) =>
   .article-head {
     max-width: var(--measure-prose);
     margin-inline: auto;
+  }
+  .article-project {
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--rust);
+    margin: 0 0 0.6rem;
+  }
+  .article-project a {
+    color: inherit;
   }
   .article-meta {
     display: flex;

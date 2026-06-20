@@ -1,6 +1,6 @@
 ---
 import { getCollection, render } from "astro:content";
-import ArticleLayout from "../../layouts/ArticleLayout.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
 
 export async function getStaticPaths() {
   const projects = await getCollection("projects");
@@ -13,20 +13,388 @@ export async function getStaticPaths() {
 const { entry } = Astro.props;
 const { Content } = await render(entry);
 const d = entry.data;
+
+const fmt = (date: Date) =>
+  date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
+
+// Aggregate this project's build-log updates (newest first).
+const isLive = (e: { data: { draft: boolean } }) =>
+  import.meta.env.PROD ? !e.data.draft : true;
+const updates = (await getCollection("logs"))
+  .filter((u) => u.data.project.id === entry.id)
+  .filter(isLive)
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+// Parts / cost math.
+const parts = d.parts;
+const lineCost = (p: { qty: number; cost?: number }) =>
+  p.cost != null ? p.cost * p.qty : null;
+const totalCost = parts.reduce((sum, p) => sum + (lineCost(p) ?? 0), 0);
+const hasAnyCost = parts.some((p) => p.cost != null);
+const money = (n: number) =>
+  `${d.currency}${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 ---
 
-<ArticleLayout
-  title={d.title}
-  description={d.description}
-  pubDate={d.pubDate}
-  updatedDate={d.updatedDate}
-  cover={d.cover}
-  coverAlt={d.coverAlt}
-  category={d.category}
-  status={d.status}
-  tags={d.tags}
-  backHref="/projects"
-  backLabel="All projects"
->
-  <Content />
-</ArticleLayout>
+<BaseLayout title={d.title} description={d.description} image={d.cover}>
+  <article class="section">
+    <div class="container">
+      <a class="back" href="/projects">← All projects</a>
+
+      <header class="proj-head">
+        <div class="proj-meta">
+          <span>{d.category}</span>
+          <span class="chip chip-status" data-status={d.status}>{d.status.replace("-", " ")}</span>
+          <span>{fmt(d.pubDate)}</span>
+          {d.updatedDate && <span>· updated {fmt(d.updatedDate)}</span>}
+        </div>
+        <h1>{d.title}</h1>
+        {d.description && <p class="proj-lead">{d.description}</p>}
+        {
+          d.tags.length > 0 && (
+            <div class="tag-row proj-tags">
+              {d.tags.map((t) => <span class="chip">#{t}</span>)}
+            </div>
+          )
+        }
+      </header>
+
+      {
+        d.cover && (
+          <figure class="proj-cover">
+            <img src={d.cover} alt={d.coverAlt ?? ""} />
+          </figure>
+        )
+      }
+
+      <!-- Quick stats -->
+      <dl class="stats">
+        <div><dt>Status</dt><dd class="cap">{d.status.replace("-", " ")}</dd></div>
+        <div><dt>Category</dt><dd>{d.category}</dd></div>
+        {d.timeSpent && <div><dt>Time spent</dt><dd>{d.timeSpent}</dd></div>}
+        {hasAnyCost && <div><dt>Total cost</dt><dd>{money(totalCost)}</dd></div>}
+        {updates.length > 0 && <div><dt>Build updates</dt><dd>{updates.length}</dd></div>}
+      </dl>
+
+      <!-- Overview prose -->
+      <div class="prose proj-overview">
+        <Content />
+      </div>
+
+      <!-- Gallery -->
+      {
+        d.gallery.length > 0 && (
+          <section class="proj-block">
+            <h2>Gallery</h2>
+            <div class="gallery">
+              {d.gallery.map((g) => (
+                <figure>
+                  <a href={g.src} target="_blank" rel="noopener">
+                    <img src={g.src} alt={g.alt} loading="lazy" />
+                  </a>
+                  {g.caption && <figcaption>{g.caption}</figcaption>}
+                </figure>
+              ))}
+            </div>
+          </section>
+        )
+      }
+
+      <!-- Parts / Bill of materials -->
+      {
+        parts.length > 0 && (
+          <section class="proj-block">
+            <h2>Parts &amp; cost</h2>
+            <div class="table-wrap">
+              <table class="bom">
+                <thead>
+                  <tr>
+                    <th>Part</th>
+                    <th class="num">Qty</th>
+                    <th class="num">Unit</th>
+                    <th class="num">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {parts.map((p) => (
+                    <tr>
+                      <td>
+                        {p.link ? (
+                          <a href={p.link} target="_blank" rel="noopener">{p.name}</a>
+                        ) : (
+                          p.name
+                        )}
+                      </td>
+                      <td class="num">{p.qty}</td>
+                      <td class="num">{p.cost != null ? money(p.cost) : "—"}</td>
+                      <td class="num">{lineCost(p) != null ? money(lineCost(p)!) : "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                {hasAnyCost && (
+                  <tfoot>
+                    <tr>
+                      <td colspan="3" class="num total-label">Total</td>
+                      <td class="num total-val">{money(totalCost)}</td>
+                    </tr>
+                  </tfoot>
+                )}
+              </table>
+            </div>
+          </section>
+        )
+      }
+
+      <!-- Learnings -->
+      {
+        d.learnings.length > 0 && (
+          <section class="proj-block">
+            <h2>What I learned</h2>
+            <ul class="learnings">
+              {d.learnings.map((l) => <li>{l}</li>)}
+            </ul>
+          </section>
+        )
+      }
+
+      <!-- Aggregated build log -->
+      <section class="proj-block" id="build-log">
+        <div class="block-head">
+          <h2>Build log</h2>
+          {updates.length > 0 && <a href="/logs" class="see-all">All project logs →</a>}
+        </div>
+        {
+          updates.length > 0 ? (
+            <ol class="timeline">
+              {updates.map((u) => (
+                <li>
+                  <a class="timeline-item" href={`/logs/${u.id}/`}>
+                    <span class="timeline-date">{fmt(u.data.pubDate)}</span>
+                    <span class="timeline-title">{u.data.title}</span>
+                    {u.data.description && (
+                      <span class="timeline-excerpt">{u.data.description}</span>
+                    )}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p class="muted">No updates logged for this project yet.</p>
+          )
+        }
+      </section>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .back {
+    display: inline-block;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+  }
+  .proj-head {
+    max-width: var(--measure-prose);
+  }
+  .proj-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.9rem;
+    align-items: center;
+    color: var(--ink-faint);
+    font-size: 0.9rem;
+    margin-bottom: 0.6rem;
+  }
+  .proj-lead {
+    font-size: 1.2rem;
+    color: var(--ink-soft);
+    margin: 0.4rem 0 0;
+  }
+  .proj-tags {
+    margin-top: 1rem;
+  }
+  .proj-cover {
+    margin: 2rem 0;
+  }
+  .proj-cover img {
+    width: 100%;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--line);
+  }
+
+  /* stats */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin: 0 0 2.5rem;
+  }
+  .stats > div {
+    background: var(--surface);
+    padding: 0.9rem 1.1rem;
+  }
+  .stats dt {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-faint);
+    margin: 0 0 0.25rem;
+  }
+  .stats dd {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 600;
+  }
+  .cap {
+    text-transform: capitalize;
+  }
+
+  .proj-overview {
+    margin-bottom: 1rem;
+  }
+
+  .proj-block {
+    max-width: var(--measure-prose);
+    margin: 3rem auto 0;
+  }
+  .proj-block h2 {
+    margin-top: 0;
+  }
+  .block-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .see-all {
+    text-decoration: none;
+    font-weight: 600;
+    white-space: nowrap;
+    font-size: 0.95rem;
+  }
+
+  /* gallery */
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+  .gallery figure {
+    margin: 0;
+  }
+  .gallery img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+  }
+  .gallery figcaption {
+    font-size: 0.82rem;
+    color: var(--ink-faint);
+    margin-top: 0.4rem;
+  }
+
+  /* parts table */
+  .table-wrap {
+    overflow-x: auto;
+  }
+  .bom {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+  }
+  .bom th,
+  .bom td {
+    text-align: left;
+    padding: 0.55rem 0.7rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .bom th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+  }
+  .bom .num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .bom tfoot .total-label {
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    border-bottom: none;
+  }
+  .bom tfoot .total-val {
+    font-weight: 700;
+    font-size: 1.05rem;
+    border-bottom: none;
+  }
+
+  .learnings {
+    padding-left: 1.2rem;
+  }
+  .learnings li {
+    margin-bottom: 0.5rem;
+    color: var(--ink-soft);
+  }
+
+  /* build-log timeline */
+  .timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-left: 2px solid var(--line-strong);
+  }
+  .timeline li {
+    position: relative;
+  }
+  .timeline-item {
+    display: block;
+    padding: 0.9rem 0 0.9rem 1.4rem;
+    text-decoration: none;
+    color: inherit;
+    border-radius: 0 var(--radius) var(--radius) 0;
+  }
+  .timeline-item:hover {
+    background: var(--paper-2);
+  }
+  .timeline li::before {
+    content: "";
+    position: absolute;
+    left: -7px;
+    top: 1.25rem;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--rust);
+    border: 2px solid var(--paper);
+  }
+  .timeline-date {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+  }
+  .timeline-title {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--rust-deep);
+  }
+  .timeline-excerpt {
+    display: block;
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+    margin-top: 0.15rem;
+  }
+</style>

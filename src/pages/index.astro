@@ -11,8 +11,12 @@ const byDate = (a: any, b: any) =>
 
 const projects = (await getCollection("projects")).filter(isLive).sort(byDate);
 const posts = (await getCollection("blog")).filter(isLive).sort(byDate);
+const updates = (await getCollection("logs")).filter(isLive).sort(byDate);
+
+const projectTitle = new Map(projects.map((p) => [p.id, p.data.title]));
 
 const recentProjects = projects.slice(0, 3);
+const recentUpdates = updates.slice(0, 3);
 const recentPosts = posts.slice(0, 3);
 ---
 
@@ -30,11 +34,11 @@ const recentPosts = posts.slice(0, 3);
     </div>
   </section>
 
-  <!-- Recent projects -->
+  <!-- Featured projects -->
   <section class="section band">
     <div class="container">
       <div class="section-head">
-        <h2>Project logs</h2>
+        <h2>Projects</h2>
         <a href="/projects" class="see-all">All projects →</a>
       </div>
       {
@@ -60,6 +64,34 @@ const recentPosts = posts.slice(0, 3);
       }
     </div>
   </section>
+
+  <!-- Latest build-log updates -->
+  {
+    recentUpdates.length > 0 && (
+      <section class="section">
+        <div class="container">
+          <div class="section-head">
+            <h2>Latest from the bench</h2>
+            <a href="/logs" class="see-all">All project logs →</a>
+          </div>
+          <div class="card-grid">
+            {recentUpdates.map((u) => (
+              <EntryCard
+                href={`/logs/${u.id}/`}
+                title={u.data.title}
+                excerpt={u.data.description}
+                date={u.data.pubDate}
+                cover={u.data.cover}
+                coverAlt={u.data.coverAlt}
+                category={projectTitle.get(u.data.project.id) ?? "Project"}
+                tags={u.data.tags}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
 
   <!-- Recent posts -->
   <section class="section">

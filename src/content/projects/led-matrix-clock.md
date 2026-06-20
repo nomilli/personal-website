@@ -8,40 +8,41 @@ category: "Electronics"
 tags: ["esp32", "leds", "pcb", "3d-printing"]
 cover: "/images/projects/led-matrix-clock.svg"
 coverAlt: "A glowing LED word clock prototype on a workbench"
+timeSpent: "~25 hours so far"
+parts:
+  - name: "ESP32 DevKitC"
+    qty: 1
+    cost: 8.50
+    link: "https://www.espressif.com/en/products/devkits"
+  - name: "WS2812B addressable LEDs (reel of 300)"
+    qty: 1
+    cost: 22.00
+  - name: "5V 4A power supply"
+    qty: 1
+    cost: 12.99
+  - name: "Photoresistor (light sensor)"
+    qty: 1
+    cost: 0.75
+  - name: "Laser-cut letter mask (acrylic)"
+    qty: 1
+  - name: "Oak for the bezel"
+    qty: 1
+    cost: 9.00
+gallery:
+  - src: "/images/projects/placeholder-1.svg"
+    alt: "Breadboard prototype lit up"
+    caption: "First light on the breadboard"
+  - src: "/images/projects/led-matrix-clock.svg"
+    alt: "LED grid spelling the time"
+    caption: "Word layout test"
+learnings:
+  - "Serpentine LED layouts need an (x, y) → index mapping or the text comes out mirrored on every other row."
+  - "256 LEDs at full white pull far more current than a USB port can supply — size the PSU for worst case, not typical."
 ---
 
-I've wanted a word clock for years. This one tells the time in words on a 16×16
-grid of addressable LEDs, syncs over WiFi via NTP, and dims itself at night.
+A word clock that tells the time in glowing words on a 16×16 grid of addressable
+LEDs. It syncs over WiFi via NTP, auto-dims at night with a light sensor, and
+hides the electronics behind a laser-cut letter mask and an oak bezel.
 
-## The plan
-
-- **Brain:** ESP32 (WiFi + plenty of GPIO)
-- **Display:** 256 WS2812B LEDs behind a laser-cut letter stencil
-- **Power:** 5V/4A supply — those LEDs are hungry at full white
-- **Enclosure:** 3D-printed frame, oak face
-
-## Build log
-
-### Driving the matrix
-
-First milestone was getting the panel lit and addressable. The trick with a
-serpentine layout is mapping (x, y) to the LED index:
-
-```cpp
-uint16_t xyToIndex(uint8_t x, uint8_t y) {
-  return (y % 2 == 0) ? y * 16 + x : y * 16 + (15 - x);
-}
-```
-
-![Placeholder build photo](/images/projects/led-matrix-clock.svg)
-
-### Time sync
-
-NTP over WiFi was painless. Next up: a light sensor for auto-dimming and a
-custom PCB so I can ditch the breadboard.
-
-## What's next
-
-- [ ] Design the carrier PCB in KiCad
-- [ ] Laser-cut the letter mask
-- [ ] Finish the oak bezel
+This page is the overview — the bench-level play-by-play lives in the **build log**
+at the bottom, posted as I make progress.

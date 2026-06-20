@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 450">
+  <rect width="600" height="450" fill="#dfe4dd"/>
+  <rect x="40" y="40" width="520" height="370" rx="8" fill="none" stroke="#3f6b5e" stroke-width="3" stroke-dasharray="10 8"/>
+  <rect x="210" y="150" width="180" height="120" rx="8" fill="#3f6b5e" opacity="0.5"/>
+  <circle cx="300" cy="160" r="20" fill="#b8542a"/>
+  <text x="300" y="360" text-anchor="middle" font-family="system-ui, sans-serif" font-size="22" fill="#6f7d72">photo placeholder</text>
+</svg>

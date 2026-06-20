@@ -1,0 +1,59 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import EntryCard from "../../components/EntryCard.astro";
+
+const isLive = (e: { data: { draft: boolean } }) =>
+  import.meta.env.PROD ? !e.data.draft : true;
+
+const projects = await getCollection("projects");
+const projectTitle = new Map(projects.map((p) => [p.id, p.data.title]));
+
+const updates = (await getCollection("logs"))
+  .filter(isLive)
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+---
+
+<BaseLayout
+  title="Project Logs"
+  description="A running feed of build-log updates across all projects — the work in progress."
+>
+  <section class="section">
+    <div class="container">
+      <p class="eyebrow">Work in progress</p>
+      <h1>Project Logs</h1>
+      <p class="muted page-intro">
+        Individual updates as builds come together, newest first. Each update is
+        part of a larger <a href="/projects">project</a>.
+      </p>
+
+      {
+        updates.length > 0 ? (
+          <div class="card-grid">
+            {updates.map((u) => (
+              <EntryCard
+                href={`/logs/${u.id}/`}
+                title={u.data.title}
+                excerpt={u.data.description}
+                date={u.data.pubDate}
+                cover={u.data.cover}
+                coverAlt={u.data.coverAlt}
+                category={projectTitle.get(u.data.project.id) ?? "Project"}
+                tags={u.data.tags}
+              />
+            ))}
+          </div>
+        ) : (
+          <p class="muted">No updates posted yet.</p>
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .page-intro {
+    max-width: 54ch;
+    margin-bottom: 2.5rem;
+  }
+</style>
