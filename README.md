@@ -21,113 +21,159 @@ npm run preview  # preview the production build locally
 | **Resume PDF** (download button) | `public/resume.pdf` — replace with your real PDF |
 | **Colors / fonts / look** | `src/styles/global.css` (CSS variables at the top) |
 | **Blog posts** | `src/content/blog/*.md` |
-| **Project logs** | `src/content/projects/*.md` |
+| **Project summaries** | `src/content/projects/*.md` |
+| **Build-log updates** | `src/content/logs/<project-slug>/*.md` |
+| **Post templates** | `templates/` |
 | **Images** | `public/images/...` |
 
 > ⚠️ Set your real domain in `src/config.ts` (`url`) before deploying — the
 > sitemap and RSS feed use it to build absolute links. The contact email is
 > currently set to `nomilli79@gmail.com`; change it there if needed.
 
-## Adding a blog post
+## The three content types
 
-1. Draft in Notion / Google Docs, then export to **Markdown**.
-2. Save it as `src/content/blog/my-post.md`.
-3. Add the frontmatter block at the top:
+| Type | Lives in | Template | URL |
+| --- | --- | --- | --- |
+| **Blog post** | `src/content/blog/` | `templates/blog-post.md` | `/blog/<slug>/` |
+| **Project summary** | `src/content/projects/` | `templates/project-summary.md` | `/projects/<slug>/` |
+| **Build-log update** | `src/content/logs/<project>/` | `templates/build-log-update.md` | `/logs/<project>/<slug>/` |
 
-```markdown
----
-title: "My post title"
-description: "One-line summary (used on cards and in link previews)."
-pubDate: 2026-06-19
-tags: ["esp32", "tutorial"]
-cover: "/images/blog/my-post-cover.jpg"   # optional
-coverAlt: "Description of the cover image" # optional
-draft: false                               # set true to hide it
----
+**Projects and build logs are linked.** A *project summary* is the polished
+showcase page (photos, parts list with auto-totaled cost, learnings). *Build-log
+updates* are one-file-per-update progress notes that appear in the `/logs` feed
+**and** in their project's "Build log" timeline. Each update points at its
+project via the `project:` field (the project filename without `.md`) — a wrong
+slug fails the build, so an update can't be orphaned.
 
-Your Markdown here. Images: ![alt text](/images/blog/photo.jpg)
+The ready-to-use **templates** in `templates/` contain every field, with inline
+comments explaining each one. The fastest way to add a post is to copy the
+matching template into the right folder, rename it, and fill it in. To draft in
+Notion instead, see below.
+
+## Drafting in Notion → publishing
+
+Two routes: a quick **manual export** (recommended to start) and an **automated
+sync** (more setup — see the next section).
+
+### One-time: load the templates into Notion
+
+1. In Notion, go to where you want your drafts to live.
+2. Import each template: top-right **•••  →  Import  →  Markdown**, then pick a
+   file from `templates/` (`blog-post.md`, `project-summary.md`,
+   `build-log-update.md`). Each becomes a Notion page you can duplicate for every
+   new post.
+3. In the imported page, the frontmatter (the `--- … ---` block) arrives as plain
+   text. Select those lines and turn them into a **code block** (type ```` ``` ````
+   or use the block menu) so they stay together and export cleanly. Everything
+   below is your writing area. Keep this page as your reusable template.
+
+### Each time you write a post
+
+1. **Duplicate** the matching template page and write your post. Fill in the
+   frontmatter values (title, description, pubDate, tags, …) inside the code block.
+2. **Export:** **•••  →  Export  →  Markdown & CSV  →  Export**.
+3. **Unzip** the download — you'll get a `.md` file plus a folder of any images
+   you embedded.
+4. **Clean up the `.md`:**
+   - **Frontmatter:** Notion wraps your code block in a ```` ``` ```` fence. Delete
+     the opening and closing ```` ``` ```` lines so the `--- … ---` block sits at the
+     very top as real frontmatter.
+   - **Title line:** Notion adds a `# Page Title` heading (and sometimes a
+     property table) at the top of the body — delete those. Your title lives in
+     the frontmatter.
+   - **Images:** Notion writes links like `![](My%20Page%20abc/photo.png)`. Move
+     those image files into `public/images/<section>/<slug>/` and rewrite each
+     link to an absolute path, e.g.
+     `![alt](/images/projects/led-matrix-clock/photo.png)`.
+5. **Save** to the right folder with a clean slug filename:
+   - Blog → `src/content/blog/<slug>.md`
+   - Project summary → `src/content/projects/<slug>.md`
+   - Build-log update → `src/content/logs/<project-slug>/<date>-<slug>.md`
+6. **Preview:** `npm run dev`, open the page, confirm it looks right.
+7. **Publish:** `git add -A && git commit -m "Add post: <title>" && git push`.
+   GitHub Actions redeploys in ~40 seconds.
+
+> Why the cleanup? Notion has no concept of frontmatter or `/public` image paths,
+> so a couple of manual fixes per post are unavoidable with the manual route. If
+> you post often and want to skip them, set up the automated sync below.
+
+## Advanced: automating Notion → GitHub
+
+Notion can't push to GitHub on its own, but you can wire up a pipeline so posts
+written in a Notion **database** publish automatically. The reliable pattern:
+
+**How it works**
+
+1. Create a **Notion integration** (<https://www.notion.so/my-integrations>) and
+   copy its secret token.
+2. Make a Notion **database** for posts with properties that map to frontmatter:
+   `Title`, `Type` (blog / project / log), `Slug`, `Date`, `Status`, `Category`,
+   `Tags`, `Project` (for logs), `Draft`. Share the database with the integration.
+3. A small Node script uses the Notion API +
+   [`notion-to-md`](https://github.com/souvikinator/notion-to-md) to convert each
+   "ready" page into a Markdown file with the correct frontmatter, downloads its
+   images into `public/images/…`, and writes the file into the right
+   `src/content/` folder.
+4. A **GitHub Action** runs that script (on a schedule and/or a manual button),
+   commits the generated files, and pushes — the existing deploy workflow then
+   publishes them.
+
+**What it needs from you**
+
+- The Notion token stored as a GitHub **Actions secret** (`NOTION_TOKEN`) —
+  never commit it.
+- The database set up with the properties above.
+- A decision on image handling (Notion image URLs expire, so the script
+  downloads them at sync time).
+
+**Sample GitHub Action** (`.github/workflows/notion-sync.yml`):
+
+```yaml
+name: Sync from Notion
+on:
+  workflow_dispatch:        # manual "Run workflow" button
+  schedule:
+    - cron: "0 12 * * *"    # and once a day at noon UTC
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm ci
+      - run: node scripts/notion-sync.mjs
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+      - name: Commit any new or changed posts
+        run: |
+          git config user.name "notion-sync"
+          git config user.email "actions@github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "Sync posts from Notion"
+          git push
 ```
 
-4. Drop any images into `public/images/blog/` and reference them with a path
-   that starts with `/images/...`.
+The `scripts/notion-sync.mjs` script — which maps your database to the content
+collections and handles images — is project-specific and **not included yet**.
+Ask and I'll build it to match your Notion database.
 
-## Projects vs. project logs
+**Trade-offs**
 
-Projects work in **two linked pieces**:
-
-- **A project summary** (`src/content/projects/`) — the polished showcase page at
-  `/projects/<slug>`: photos, parts list with auto-totaled cost, learnings, and an
-  aggregated list of that project's updates.
-- **Build-log updates** (`src/content/logs/`) — one file per update, shown in the
-  feed at `/logs` and linked from the project. Each update points at its project
-  via the `project:` field (the project file's name without `.md`). A wrong slug
-  fails the build, so you can't orphan an update.
-
-### 1. Create the project summary
-
-Save as `src/content/projects/led-matrix-clock.md`:
-
-```markdown
----
-title: "LED Matrix Clock"
-description: "One-line summary."
-pubDate: 2026-05-02
-updatedDate: 2026-06-10        # optional
-status: "in-progress"          # planned | in-progress | complete
-category: "Electronics"        # e.g. Electronics, Woodworking
-tags: ["esp32", "leds"]
-cover: "/images/projects/clock.jpg"
-coverAlt: "Description"
-timeSpent: "~25 hours so far"  # optional, free-form
-currency: "$"                  # optional, default "$"
-parts:                         # optional — renders a table + auto total
-  - name: "ESP32 DevKitC"
-    qty: 1
-    cost: 8.50                 # unit cost; leave off if unknown
-    link: "https://..."        # optional
-  - name: "WS2812B LEDs (reel)"
-    qty: 1
-    cost: 22.00
-gallery:                       # optional finished-photo grid
-  - src: "/images/projects/clock/final-1.jpg"
-    alt: "Front view"
-    caption: "Finished and mounted"
-learnings:                     # optional bulleted takeaways
-  - "Size the power supply for worst-case LED current."
----
-
-A Markdown **overview** of the build goes here.
-```
-
-`led-matrix-clock.md` → `/projects/led-matrix-clock/`.
-
-### 2. Add build-log updates as you go
-
-Each update is its own file under `src/content/logs/`. Group them in a folder per
-project, e.g. `src/content/logs/led-matrix-clock/2026-05-02-first-light.md`:
-
-```markdown
----
-title: "First light on the matrix"
-description: "One-line summary (shown on the feed card)."
-pubDate: 2026-05-02
-project: led-matrix-clock      # must match the project filename
-tags: ["leds"]
-cover: "/images/projects/clock/breadboard.jpg"   # optional
-coverAlt: "Description"
-draft: false
----
-
-The update write-up, with images: ![alt](/images/projects/clock/breadboard.jpg)
-```
-
-The update appears in the `/logs` feed and in the project's "Build log" timeline
-automatically. Its URL follows the file path, e.g.
-`/logs/led-matrix-clock/2026-05-02-first-light/`.
+- ✅ Write entirely in Notion; publish with no local steps.
+- ❌ More moving parts: an integration token, a database schema, and
+  image-download logic. A malformed entry can fail the build.
+- For a handful of posts a month, the **manual export is simpler and more
+  robust**. Automation pays off when you post frequently.
 
 ## Tech notes
 
 - Astro 5 with Markdown/MDX content collections (`src/content.config.ts`)
 - Zero client-side JavaScript by default — very fast
+- Native `<details>` expand/collapse for build-log entries (no JS)
 - Auto-generated `sitemap-index.xml` and `/rss.xml`
 - Light/dark aware (follows the visitor's system setting)
+- Ready-to-use post templates in `templates/`
