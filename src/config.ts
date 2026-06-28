@@ -24,7 +24,7 @@ export const SITE = {
   url: "https://nolanmilleson.com",
 
   /** Contact email — used for the "Email me" links. */
-  email: "nomilli79@gmail.com",
+  email: "hello@nolanmilleson.com",
 
   /**
    * Optional social / external links. Leave a value as "" to hide that link.

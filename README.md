@@ -28,7 +28,7 @@ npm run preview  # preview the production build locally
 
 > ⚠️ Set your real domain in `src/config.ts` (`url`) before deploying — the
 > sitemap and RSS feed use it to build absolute links. The contact email is
-> currently set to `nomilli79@gmail.com`; change it there if needed.
+> currently set to `hello@nolanmilleson.com`; change it there if needed.
 
 ## The three content types
 
